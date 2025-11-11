@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trang Phân Tích Chỉ Số Năm Học</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script src="https://unpkg.com/lucide-react@latest/dist/lucide-react.js"></script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* slate-50 */
+        }
+        .hidden {
+            display: none;
+        }
+        /* Custom scrollbar for a better look */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9; /* slate-100 */
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1; /* slate-300 */
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; /* slate-400 */
+        }
+        /* Hiệu ứng hover cho thẻ vẫn được giữ nguyên */
+        .card-hover-effect {
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        .card-hover-effect:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+        /* Giữ nguyên style cho list trong kết quả */
+        .prose ul {
+            list-style-position: inside;
+            padding-left: 0;
+        }
+        .prose li {
+            margin-top: 0.5em;
+        }
+    </style>
+</head>
+<body class="antialiased text-slate-800">
+
+    <div id="app" class="min-h-screen">
+
+        <div id="auth-container" class="flex items-center justify-center min-h-screen bg-gradient-to-br from-indigo-500 to-purple-600 p-4">
+            <div class="w-full max-w-md p-8 space-y-6 bg-white/90 backdrop-blur-md rounded-3xl shadow-xl">
+                
+                <div id="login-form">
+                    <h2 class="text-3xl font-bold text-center text-slate-900">Đăng Nhập</h2>
+                    <p class="text-center text-slate-500 mt-2">Chào mừng trở lại!</p>
+                    <form id="login" class="mt-8 space-y-6">
+                        <div class="rounded-md shadow-sm -space-y-px">
+                            <div>
+                                <input id="login-email" name="email" type="email" autocomplete="email" required class="appearance-none rounded-none relative block w-full px-3 py-3 border border-slate-300 placeholder-slate-500 text-slate-900 rounded-t-md focus:outline-none focus:ring-purple-500 focus:border-purple-500 focus:z-10 sm:text-sm transition-colors duration-200" placeholder="Địa chỉ email">
+                            </div>
+                            <div>
+                                <input id="login-password" name="password" type="password" autocomplete="current-password" required class="appearance-none rounded-none relative block w-full px-3 py-3 border border-slate-300 placeholder-slate-500 text-slate-900 rounded-b-md focus:outline-none focus:ring-purple-500 focus:border-purple-500 focus:z-10 sm:text-sm transition-colors duration-200" placeholder="Mật khẩu">
+                            </div>
+                        </div>
+                        <p id="login-error" class="text-sm text-red-600"></p>
+                        <div>
+                            <button type="submit" class="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transform transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5">
+                                Đăng Nhập
+                            </button>
+                        </div>
+                    </form>
+                    <p class="mt-4 text-sm text-center text-slate-600">
+                        Chưa có tài khoản? 
+                        <a href="#" id="show-register" class="font-medium text-indigo-600 hover:text-indigo-500">
+                            Đăng ký ngay
+                        </a>
+                    </p>
+                </div>
+
+                <div id="register-form" class="hidden">
+                    <h2 class="text-3xl font-bold text-center text-slate-900">Tạo Tài Khoản</h2>
+                     <p class="text-center text-slate-500 mt-2">Bắt đầu phân tích dữ liệu của bạn.</p>
+                    <form id="register" class="mt-8 space-y-6">
+                         <div class="rounded-md shadow-sm -space-y-px">
+                            <div>
+                                <input id="register-email" name="email" type="email" autocomplete="email" required class="appearance-none rounded-none relative block w-full px-3 py-3 border border-slate-300 placeholder-slate-500 text-slate-900 rounded-t-md focus:outline-none focus:ring-purple-500 focus:border-purple-500 focus:z-10 sm:text-sm transition-colors duration-200" placeholder="Địa chỉ email">
+                            </div>
+                            <div>
+                                <input id="register-password" name="password" type="password" autocomplete="new-password" required class="appearance-none rounded-none relative block w-full px-3 py-3 border border-slate-300 placeholder-slate-500 text-slate-900 rounded-b-md focus:outline-none focus:ring-purple-500 focus:border-purple-500 focus:z-10 sm:text-sm transition-colors duration-200" placeholder="Mật khẩu">
+                            </div>
+                        </div>
+                         <p id="register-error" class="text-sm text-red-600"></p>
+                        <div>
+                            <button type="submit" class="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transform transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5">
+                                Đăng Ký
+                            </button>
+                        </div>
+                    </form>
+                    <p class="mt-4 text-sm text-center text-slate-600">
+                        Đã có tài khoản?
+                        <a href="#" id="show-login" class="font-medium text-indigo-600 hover:text-indigo-500">
+                            Đăng nhập
+                        </a>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div id="app-container" class="hidden">
+            <header class="bg-white shadow-md sticky top-0 z-40 border-b border-slate-200">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div class="flex justify-between items-center h-16">
+                        <div class="flex items-center space-x-2">
+                            <svg class="h-8 w-8 text-indigo-600" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+                            <h1 class="text-xl font-bold text-slate-900">Bảng Phân Tích Chỉ Số</h1>
+                        </div>
+                        <div class="flex items-center space-x-4">
+                             <span id="user-email" class="text-sm text-slate-600 hidden sm:block"></span>
+                            <button id="logout-button" class="flex items-center text-sm font-medium text-slate-600 hover:text-indigo-600">
+                               <svg class="w-4 h-4 mr-1.5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
+                                Đăng xuất
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <main class="p-4 sm:p-6 lg:p-8">
+                <div id="page-content" class="max-w-7xl mx-auto">
+                    
+                    <div id="home-page">
+                        <div class="mb-8 p-8 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-2xl shadow-lg">
+                            <h2 class="text-4xl font-bold">Chào mừng bạn!</h2>
+                            <p class="mt-3 text-lg text-indigo-100">Chọn một chỉ số bên dưới để bắt đầu phân tích và trực quan hóa dữ liệu.</p>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                            <div class="analysis-card card-hover-effect bg-white p-6 rounded-xl shadow-md cursor-pointer" data-indicator="quy-mo-sinh-vien" data-title="Quy mô Sinh viên">
+                                <div class="flex items-center justify-center h-12 w-12 rounded-lg bg-indigo-100 text-indigo-600">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                                </div>
+                                <h3 class="mt-4 text-lg font-semibold text-slate-900">Quy mô Sinh viên</h3>
+                                <p class="mt-1 text-sm text-slate-500">Phân tích biến động và quy mô sinh viên theo khoa, khóa.</p>
+                            </div>
+                            
+                            <div class="analysis-card card-hover-effect bg-white p-6 rounded-xl shadow-md cursor-pointer" data-indicator="ty-le-thoi-hoc" data-title="Tỷ lệ Thôi học">
+                                <div class="flex items-center justify-center h-12 w-12 rounded-lg bg-red-100 text-red-600">
+                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M21 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h6"/></svg>
+                                </div>
+                                <h3 class="mt-4 text-lg font-semibold text-slate-900">Tỷ lệ Thôi học</h3>
+                                <p class="mt-1 text-sm text-slate-500">So sánh và phân tích tỷ lệ sinh viên thôi học, bảo lưu.</p>
+                            </div>
+
+                             <div class="analysis-card card-hover-effect bg-white p-6 rounded-xl shadow-md cursor-pointer" data-indicator="ty-le-tot-nghiep" data-title="Tỷ lệ Tốt nghiệp Đúng hạn">
+                                <div class="flex items-center justify-center h-12 w-12 rounded-lg bg-green-100 text-green-600">
+                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/><path d="m9 9.5 2 2 4-4"/></svg>
+                                </div>
+                                <h3 class="mt-4 text-lg font-semibold text-slate-900">Tỷ lệ Tốt nghiệp Đúng hạn</h3>
+                                <p class="mt-1 text-sm text-slate-500">Phân tích tỷ lệ tốt nghiệp theo ngành và xếp loại.</p>
+                            </div>
+                            
+                            <div class="analysis-card card-hover-effect bg-white p-6 rounded-xl shadow-md cursor-pointer" data-indicator="ket-qua-hoc-tap" data-title="Kết quả Học tập">
+                                <div class="flex items-center justify-center h-12 w-12 rounded-lg bg-amber-100 text-amber-600">
+                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                                </div>
+                                <h3 class="mt-4 text-lg font-semibold text-slate-900">Kết quả Học tập</h3>
+                                <p class="mt-1 text-sm text-slate-500">Thống kê kết quả học tập, tỷ lệ sinh viên theo học lực.</p>
+                            </div>
+                            
+                             <div class="analysis-card card-hover-effect bg-white p-6 rounded-xl shadow-md cursor-pointer" data-indicator="hoc-lai-thi-lai" data-title="Tỷ lệ Học lại, Thi lại">
+                                <div class="flex items-center justify-center h-12 w-12 rounded-lg bg-cyan-100 text-cyan-600">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v6h6"/><path d="M21 12A9 9 0 0 0 6 5.3L3 8"/><path d="M21 22v-6h-6"/><path d="M3 12a9 9 0 0 0 15 6.7l3-2.7"/></svg>
+                                </div>
+                                <h3 class="mt-4 text-lg font-semibold text-slate-900">Học lại, Thi lại</h3>
+                                <p class="mt-1 text-sm text-slate-500">Phân tích số lượt sinh viên học lại và thi lại theo môn/ngành.</p>
+                            </div>
+
+                             <div class="analysis-card card-hover-effect bg-white p-6 rounded-xl shadow-md cursor-pointer" data-indicator="ty-le-di-hoc" data-title="Tỷ lệ Đi học">
+                                <div class="flex items-center justify-center h-12 w-12 rounded-lg bg-sky-100 text-sky-600">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="m10.5 14 2 2 4-4"/></svg>
+                                </div>
+                                <h3 class="mt-4 text-lg font-semibold text-slate-900">Tỷ lệ Đi học</h3>
+                                <p class="mt-1 text-sm text-slate-500">Thống kê và đối sánh tỷ lệ chuyên cần của sinh viên.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="analysis-page" class="hidden">
+                        
+                        <button id="back-to-home" class="flex items-center mb-6 text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 px-4 py-2 rounded-lg shadow-md border border-slate-200 transition-all hover:-translate-y-0.5 transform">
+                             <svg class="w-4 h-4 mr-2" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" x2="5" y1="12" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+                            Quay lại trang chủ
+                        </button>
+                        
+                        <h2 id="analysis-title" class="text-3xl font-bold text-slate-900 mb-2"></h2>
+                        <p class="text-slate-500 mb-6">Tải tệp dữ liệu của bạn từ máy tính để bắt đầu phân tích.</p>
+                        
+                        <div class="bg-white p-6 rounded-xl shadow-md mb-6">
+                            
+                            <label for="file-input" class="flex flex-col items-center justify-center w-full h-64 border-2 border-slate-300 border-dashed rounded-xl cursor-pointer bg-slate-50 hover:bg-slate-100 transition-colors">
+                                <div class="flex flex-col items-center justify-center pt-5 pb-6 text-center">
+                                    <svg class="w-10 h-10 mb-4 text-indigo-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M12 12v9"/><path d="m16 16-4-4-4 4"/></svg>
+                                    <p class="mb-2 text-sm text-slate-500"><span class="font-semibold">Nhấn để tải lên</span> hoặc kéo thả</p>
+                                    <p class="text-xs text-slate-500">Định dạng .csv hoặc .xlsx</p>
+                                </div>
+                                <input id="file-input" type="file" class="hidden" accept=".csv, .xlsx, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"/>
+                            </label>
+                            
+                            <span id="file-name" class="text-sm text-slate-600 mt-3 block font-medium"></span>
+                            
+                            <button id="analyze-button" class="mt-6 inline-flex items-center justify-center rounded-md border border-transparent bg-indigo-600 px-6 py-2 text-base font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transform transition-all hover:-translate-y-0.5">
+                                Phân tích
+                            </button>
+                        </div>
+
+                        <div id="results-container" class="hidden">
+                            <div id="loading-spinner" class="text-center py-10 hidden">
+                                <div role="status" class="flex items-center justify-center space-x-3">
+                                    <svg aria-hidden="true" class="w-10 h-10 text-slate-200 animate-spin fill-indigo-600" viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z" fill="currentColor"/>
+                                        <path d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0492C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5424 39.6781 93.9676 39.0409Z" fill="currentFill"/>
+                                    </svg>
+                                    <span class="text-slate-600">Đang phân tích, vui lòng chờ...</span>
+                                </div>
+                            </div>
+
+                            <div id="error-message" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative" role="alert">
+                                <strong class="font-bold">Lỗi!</strong>
+                                <span class="block sm:inline" id="error-text"></span>
+                            </div>
+
+                            <div id="analysis-results" class="space-y-8 hidden">
+                                <div>
+                                    <div class="bg-white p-6 rounded-xl shadow-md">
+                                        <h3 class="text-xl font-semibold text-slate-900 mb-4">Biểu đồ Trực quan</h3>
+                                        <div class="relative h-96">
+                                            <canvas id="analysis-chart"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                                    <div class="bg-white p-6 rounded-xl shadow-md">
+                                        <h3 class="flex items-center text-xl font-semibold text-slate-900 mb-4">
+                                            <svg class="w-6 h-6 text-indigo-600 mr-2.5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></svg>
+                                            Phân tích Tổng quan
+                                        </h3>
+                                        <div id="summary-output" class="prose prose-sm max-w-none text-slate-600"></div>
+                                    </div>
+                                    <div class="bg-white p-6 rounded-xl shadow-md">
+                                        <h3 class="flex items-center text-xl font-semibold text-slate-900 mb-4">
+                                            <svg class="w-6 h-6 text-amber-500 mr-2.5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6.5 8c0 1.3.5 2.6 1.5 3.5.7.8 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>
+                                            Đề xuất & Hướng phát triển
+                                        </h3>
+                                        <div id="recommendations-output" class="prose prose-sm max-w-none text-slate-600"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // DOM Elements
+            const authContainer = document.getElementById('auth-container');
+            const appContainer = document.getElementById('app-container');
+            const loginFormEl = document.getElementById('login');
+            const registerFormEl = document.getElementById('register');
+            const showRegisterLink = document.getElementById('show-register');
+            const showLoginLink = document.getElementById('show-login');
+            const logoutButton = document.getElementById('logout-button');
+            const userEmailSpan = document.getElementById('user-email');
+            
+            const homePage = document.getElementById('home-page');
+            const analysisPage = document.getElementById('analysis-page');
+            const backToHomeButton = document.getElementById('back-to-home');
+            
+            const analysisCards = document.querySelectorAll('.analysis-card');
+            const analysisTitle = document.getElementById('analysis-title');
+            const analyzeButton = document.getElementById('analyze-button');
+            const fileInput = document.getElementById('file-input');
+            const fileNameSpan = document.getElementById('file-name');
+
+            const resultsContainer = document.getElementById('results-container');
+            const loadingSpinner = document.getElementById('loading-spinner');
+            const errorMessage = document.getElementById('error-message');
+            const errorText = document.getElementById('error-text');
+            const analysisResults = document.getElementById('analysis-results');
+            const summaryOutput = document.getElementById('summary-output');
+            const recommendationsOutput = document.getElementById('recommendations-output');
+            let analysisChartInstance = null;
+            
+            // --- Temporary Authentication Store ---
+            let tempUserDB = []; // In-memory user database
+            let currentUser = null; // Holds the currently logged-in user
+
+            // --- Authentication UI Management ---
+            function updateAuthUI() {
+                if (currentUser) {
+                    authContainer.classList.add('hidden');
+                    appContainer.classList.remove('hidden');
+                    userEmailSpan.textContent = currentUser.email;
+                    showPage('home');
+                } else {
+                    authContainer.classList.remove('hidden');
+                    appContainer.classList.add('hidden');
+                    userEmailSpan.textContent = '';
+                }
+            }
+
+            // --- Authentication Event Listeners ---
+            registerFormEl.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const email = document.getElementById('register-email').value;
+                const password = document.getElementById('register-password').value;
+                const errorEl = document.getElementById('register-error');
+                errorEl.textContent = '';
+
+                if (password.length < 6) {
+                    errorEl.textContent = "Mật khẩu phải có ít nhất 6 ký tự.";
+                    return;
+                }
+
+                if (tempUserDB.some(user => user.email === email)) {
+                    errorEl.textContent = "Email này đã được sử dụng.";
+                    return;
+                }
+
+                const newUser = { email, password };
+                tempUserDB.push(newUser);
+                currentUser = newUser;
+                updateAuthUI();
+            });
+
+            loginFormEl.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const email = document.getElementById('login-email').value;
+                const password = document.getElementById('login-password').value;
+                const errorEl = document.getElementById('login-error');
+                errorEl.textContent = '';
+
+                const foundUser = tempUserDB.find(user => user.email === email && user.password === password);
+                if (foundUser) {
+                    currentUser = foundUser;
+                    updateAuthUI();
+                } else {
+                    errorEl.textContent = "Email hoặc mật khẩu không chính xác.";
+                }
+            });
+
+            logoutButton.addEventListener('click', () => {
+                currentUser = null;
+                updateAuthUI();
+            });
+
+            showRegisterLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                document.getElementById('login-form').classList.add('hidden');
+                document.getElementById('register-form').classList.remove('hidden');
+            });
+            
+            showLoginLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                document.getElementById('register-form').classList.add('hidden');
+                document.getElementById('login-form').classList.remove('hidden');
+            });
+
+            // --- Navigation Logic (Không thay đổi) ---
+            let currentPage = 'home';
+            let currentIndicator = null;
+            let currentTitle = '';
+
+            function showPage(pageName, context = {}) {
+                homePage.classList.add('hidden');
+                analysisPage.classList.add('hidden');
+                
+                if (pageName === 'home') {
+                    homePage.classList.remove('hidden');
+                    currentPage = 'home';
+                } else if (pageName === 'analysis') {
+                    analysisPage.classList.remove('hidden');
+                    currentPage = 'analysis';
+                    currentIndicator = context.indicator;
+                    currentTitle = context.title;
+                    analysisTitle.textContent = currentTitle;
+                    fileInput.value = '';
+                    fileNameSpan.textContent = '';
+                    resultsContainer.classList.add('hidden');
+                    analysisResults.classList.add('hidden');
+                    errorMessage.classList.add('hidden');
+                }
+            }
+
+            analysisCards.forEach(card => {
+                card.addEventListener('click', () => {
+                    const indicator = card.dataset.indicator;
+                    const title = card.dataset.title;
+                    showPage('analysis', { indicator, title });
+                });
+            });
+
+            backToHomeButton.addEventListener('click', () => {
+                showPage('home');
+            });
+            
+            // --- File Input Logic ---
+            fileInput.addEventListener('change', () => {
+                const file = fileInput.files[0];
+                if (file) {
+                    fileNameSpan.textContent = `Tệp đã chọn: ${file.name}`;
+                } else {
+                    fileNameSpan.textContent = '';
+                }
+            });
+
+            // --- Gemini API & Analysis Logic ---
+            
+            // Hàm generateUserPrompt không thay đổi
+            function generateUserPrompt(indicator, title, csvData) {
+                let mainInstruction = `Bạn là một chuyên gia phân tích dữ liệu giáo dục.`;
+                let analysisFocus = `
+                    - **Phân tích (summary):** Viết một phân tích tổng quan, súc tích về dữ liệu. Nêu bật những con số, xu hướng và điểm bất thường quan trọng nhất.
+                    - **Đề xuất (recommendations):** Dựa trên phân tích, tạo ra một danh sách (array) chứa 2-3 đề xuất chiến lược cụ thể, khả thi. Mỗi đề xuất phải là một chuỗi văn bản (string).
+                    - **Biểu đồ (chart):** - type: 'bar'
+                        - data.labels: Trích xuất các nhãn phù hợp nhất từ cột danh mục (ví dụ: tên ngành).
+                        - data.datasets: Tạo một dataset duy nhất thể hiện dữ liệu số quan trọng nhất.
+                `;
+
+                switch (indicator) {
+                    case 'quy-mo-sinh-vien':
+                        mainInstruction = `Bạn là một chuyên gia tư vấn chiến lược tuyển sinh cho một trường đại học.`;
+                        analysisFocus = `
+                            - **Phân tích (summary):** Viết một đoạn phân tích chi tiết (khoảng 150-200 từ) **chỉ tập trung vào ngành Công nghệ thông tin (CNTT)**. Phân tích sự biến động quy mô sinh viên của ngành CNTT qua các khóa hoặc các năm có trong dữ liệu. Nêu bật các xu hướng chính, chẳng hạn như tăng trưởng, sụt giảm, hoặc ổn định.
+                            - **Đề xuất (recommendations):** Tạo ra một danh sách (array) chứa 2-3 đề xuất chiến lược **dành riêng cho ngành CNTT**. Các đề xuất cần cụ thể, ví dụ: "Quy mô sinh viên CNTT khóa 18 giảm 10% so với khóa 17, đề xuất nhà trường cần đẩy mạnh hoạt động truyền thông tuyển sinh trên các nền tảng số và tổ chức thêm workshop về các xu hướng công nghệ mới để thu hút thí sinh."
+                            - **Biểu đồ (chart):**
+                                - type: 'bar'
+                                - data.labels: Phải là các khóa học của ngành CNTT (ví dụ: 'CNTT K16', 'CNTT K17', 'CNTT K18').
+                                - data.datasets: Sẽ bao gồm một bộ dữ liệu duy nhất thể hiện 'Quy mô sinh viên' hoặc 'Số lượng tuyển sinh' của ngành CNTT qua các khóa.
+                        `;
+                        break;
+                    case 'ty-le-thoi-hoc':
+                         analysisFocus = `
+                            - **Phân tích (summary):** Tập trung vào việc xác định các ngành có tỷ lệ thôi học cao và thấp bất thường. So sánh với tỷ lệ trung bình toàn trường (nếu có thể tính). Đưa ra giả thuyết về nguyên nhân.
+                            - **Đề xuất (recommendations):** Đề xuất giải pháp can thiệp cho ngành có tỷ lệ thôi học cao (ví dụ: tăng cường cố vấn học tập, khảo sát sinh viên). Khen ngợi và đề xuất nhân rộng mô hình từ ngành có tỷ lệ thôi học thấp.
+                            - **Biểu đồ (chart):**
+                                - type: 'bar'
+                                - data.labels: Tên các ngành/khoa.
+                                - data.datasets: Một dataset duy nhất thể hiện 'Tỷ lệ thôi học (%)'. Sắp xếp dữ liệu trong biểu đồ theo tỷ lệ giảm dần.
+                        `;
+                        break;
+                    case 'ket-qua-hoc-tap':
+                        analysisFocus = `
+                            - **Phân tích (summary):** Phân tích phổ điểm học lực (Xuất sắc, Giỏi, Khá, v.v.) của sinh viên theo từng ngành. Ngành nào có tỷ lệ sinh viên Giỏi/Xuất sắc cao? Ngành nào có nhiều sinh viên ở mức Yếu/Kém?
+                            - **Đề xuất (recommendations):** Đề xuất chương trình vinh danh cho ngành có kết quả tốt. Đối với ngành có kết quả chưa cao, đề xuất chương trình phụ đạo, học nhóm.
+                            - **Biểu đồ (chart):**
+                                - type: 'bar'
+                                - options: { "stacked": true }
+                                - data.labels: Tên các ngành.
+                                - data.datasets: Nhiều dataset, mỗi dataset tương ứng với một loại học lực (ví dụ: 'Tỷ lệ Xuất sắc (%)', 'Tỷ lệ Giỏi (%)').
+                        `;
+                        break;
+                }
+
+                const jsonStructure = `
+                {
+                  "summary": "Nội dung phân tích chi tiết dựa trên yêu cầu.",
+                  "recommendations": [
+                    "Đề xuất thứ nhất.",
+                    "Đề xuất thứ hai."
+                  ],
+                  "chart": {
+                    "type": "loại biểu đồ (ví dụ: bar, line)",
+                    "data": {
+                      "labels": ["mảng các nhãn"],
+                      "datasets": [
+                        { "label": "tên dataset 1", "data": [mảng dữ liệu số 1] },
+                        { "label": "tên dataset 2", "data": [mảng dữ liệu số 2] }
+                      ]
+                    },
+                    "options": { "stacked": false }
+                  }
+                }
+                `;
+
+                return `
+                ${mainInstruction}
+                Dựa vào dữ liệu CSV sau đây về chỉ số '${title}':
+                \`\`\`csv
+                ${csvData}
+                \`\`\`
+                Hãy thực hiện các yêu cầu sau và trả về kết quả dưới định dạng một đối tượng JSON duy nhất.
+
+                **Yêu cầu chi tiết:**
+                ${analysisFocus}
+
+                **Định dạng JSON đầu ra bắt buộc:**
+                ${jsonStructure}
+
+                Hãy chắc chắn rằng kết quả trả về chỉ là một khối mã JSON hợp lệ, không có bất kỳ văn bản giải thích hay ký tự \`\`\` nào bao quanh.
+                `;
+            }
+
+            analyzeButton.addEventListener('click', handleAnalysis);
+
+            // Hàm readFileAsText không thay đổi
+            function readFileAsText(file) {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onerror = () => {
+                        reader.abort();
+                        reject(new DOMException("Problem parsing input file."));
+                    };
+
+                    const fileExtension = file.name.split('.').pop().toLowerCase();
+
+                    if (fileExtension === 'csv') {
+                        reader.onload = (e) => resolve(e.target.result);
+                        reader.readAsText(file);
+                    } else if (fileExtension === 'xlsx') {
+                        reader.onload = (e) => {
+                            try {
+                                const data = new Uint8Array(e.target.result);
+                                const workbook = XLSX.read(data, { type: 'array' });
+                                const firstSheetName = workbook.SheetNames[0];
+                                const worksheet = workbook.Sheets[firstSheetName];
+                                const csvString = XLSX.utils.sheet_to_csv(worksheet);
+                                resolve(csvString);
+                            } catch (err) {
+                                reject(err);
+                            }
+                        };
+                        reader.readAsArrayBuffer(file);
+                    } else {
+                        reject(new Error("Unsupported file type. Please upload a .csv or .xlsx file."));
+                    }
+                });
+            }
+
+            // Hàm handleAnalysis ĐÃ CẬP NHẬT với Cảnh Báo Bảo Mật
+            async function handleAnalysis() {
+                const file = fileInput.files[0];
+                if (!file) {
+                    showError("Vui lòng chọn một tệp để phân tích.");
+                    return;
+                }
+
+                resultsContainer.classList.remove('hidden');
+                loadingSpinner.classList.remove('hidden');
+                analysisResults.classList.add('hidden');
+                errorMessage.classList.add('hidden');
+
+                try {
+                    const csvData = await readFileAsText(file);
+                    
+                    if (!csvData.trim()) {
+                        showError("Tệp rỗng hoặc không thể đọc được nội dung.");
+                        loadingSpinner.classList.add('hidden');
+                        return;
+                    }
+
+                    // !!! CẢNH BÁO BẢO MẬT !!!
+                    // KHÔNG BAO GIỜ dán API key trực tiếp vào code front-end như thế này.
+                    // Bất kỳ ai cũng có thể xem và đánh cắp khóa của bạn.
+                    // Hãy thay thế bằng "YOUR_API_KEY" và hiểu rõ rủi ro khi demo.
+                    const apiKey = "AIzaSyBp519ZIilzcucs4lJb-iGc6l2yv338Tgs"; // <-- HÃY THAY THẾ BẰNG KHÓA CỦA BẠN
+                    
+                    // Thêm kiểm tra API Key
+                    if (apiKey === "YOUR_API_KEY" || !apiKey) {
+                        showError("Lỗi cấu hình: API Key chưa được cung cấp. Vui lòng thêm khóa của bạn vào file script (logic.js) để tiếp tục.");
+                        loadingSpinner.classList.add('hidden');
+                        return;
+                    }
+
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+                    
+                    const userPrompt = generateUserPrompt(currentIndicator, currentTitle, csvData);
+
+                    const payload = {
+                        contents: [{ parts: [{ text: userPrompt }] }],
+                        generationConfig: {
+                            responseMimeType: "application/json",
+                        }
+                    };
+                    
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        const errorBody = await response.text();
+                        throw new Error(`API request failed with status ${response.status}: ${errorBody}`);
+                    }
+                    
+                    const result = await response.json();
+                    
+                    // Thêm kiểm tra nếu API block
+                    if (!result.candidates || result.candidates.length === 0) {
+                         console.error("API Response Error:", result);
+                         let errorMsg = "API không trả về kết quả.";
+                         if (result.promptFeedback && result.promptFeedback.blockReason) {
+                             errorMsg = `Yêu cầu bị chặn: ${result.promptFeedback.blockReason}.`;
+                         }
+                         throw new Error(errorMsg);
+                    }
+                    
+                    const textResponse = result.candidates[0].content.parts[0].text;
+                    const parsedData = JSON.parse(textResponse);
+
+                    renderResults(parsedData);
+
+                } catch (error) {
+                    console.error("Analysis Error:", error);
+                    showError(`Không thể phân tích dữ liệu. Vui lòng kiểm tra lại định dạng tệp hoặc thử lại sau. (Lỗi: ${error.message})`);
+                } finally {
+                    loadingSpinner.classList.add('hidden');
+                }
+            }
+            
+            // Hàm renderResults không thay đổi
+            function renderResults(data) {
+                analysisResults.classList.remove('hidden');
+                
+                summaryOutput.innerHTML = data.summary;
+                recommendationsOutput.innerHTML = `<ul>${data.recommendations.map(item => `<li>${item.trim()}</li>`).join('')}</ul>`;
+
+                const ctx = document.getElementById('analysis-chart').getContext('2d');
+                if (analysisChartInstance) {
+                    analysisChartInstance.destroy();
+                }
+
+                const colors = [
+                    { bg: 'rgba(79, 70, 229, 0.7)', border: 'rgba(79, 70, 229, 1)' }, // Indigo
+                    { bg: 'rgba(2, 132, 199, 0.7)', border: 'rgba(2, 132, 199, 1)' },  // Sky
+                    { bg: 'rgba(245, 158, 11, 0.7)', border: 'rgba(245, 158, 11, 1)' },  // Amber
+                    { bg: 'rgba(22, 163, 74, 0.7)', border: 'rgba(22, 163, 74, 1)' },  // Green
+                    { bg: 'rgba(220, 38, 38, 0.7)', border: 'rgba(220, 38, 38, 1)' },  // Red
+                ];
+                
+                const styledDatasets = data.chart.data.datasets.map((ds, index) => ({
+                    ...ds,
+                    backgroundColor: colors[index % colors.length].bg,
+                    borderColor: colors[index % colors.length].border,
+                    borderWidth: data.chart.type === 'line' ? 2.5 : 1,
+                    borderRadius: data.chart.type === 'bar' ? 5 : undefined,
+                    fill: data.chart.type === 'line' ? false : undefined,
+                    tension: data.chart.type === 'line' ? 0.1 : undefined,
+                }));
+                
+                const chartOptions = {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true, ticks: { color: '#475569' }, grid: { color: '#e2e8f0' } },
+                        x: { ticks: { color: '#475569' }, grid: { display: false } }
+                    },
+                    plugins: {
+                        legend: { position: 'top', labels: { color: '#334155' } },
+                        tooltip: { backgroundColor: '#1e293b', titleColor: '#f1f5f9', bodyColor: '#e2e8f0' }
+                    }
+                };
+
+                if (data.chart.type === 'bar' && data.chart.options?.stacked) {
+                    chartOptions.scales.x.stacked = true;
+                    chartOptions.scales.y.stacked = true;
+                }
+
+                analysisChartInstance = new Chart(ctx, {
+                    type: data.chart.type || 'bar',
+                    data: {
+                        labels: data.chart.data.labels,
+                        datasets: styledDatasets
+                    },
+                    options: chartOptions
+                });
+            }
+            
+            // Hàm showError không thay đổi
+            function showError(message) {
+                errorMessage.classList.remove('hidden');
+                errorText.textContent = message;
+                analysisResults.classList.add('hidden');
+            }
+            
+            // --- Initial Load ---
+            updateAuthUI(); // Show login page by default
+        });
+    </script>
+</body>
+</html>
